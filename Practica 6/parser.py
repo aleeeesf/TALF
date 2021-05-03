@@ -1,11 +1,38 @@
 from sly import Parser
-from LexerTokens import GetTokens
+from CalcLexer import CalcLexer
 
-class CalcParser(Parser):
+class Gramatica(Parser):
     # Get the token list from the lexer (required)
-    tokens = GetTokens.tokens
-
+    tokens = CalcLexer.tokens
+    debugfile = 'parser.out'
     # Grammar rules and actions
+    def __init__(self):
+        self.names = { }
+
+
+
+    @_('statement PTOCOMA')
+    def total(self, p):
+        return p.statement   
+
+
+
+
+
+
+    @_('ID ASSIGN statement')
+    def statement(self, p):
+        self.names[p.ID] = p.statement
+        return p.statement
+
+    @_('expr')
+    def statement(self, p):
+        return p.expr
+
+
+
+
+
     @_('expr PLUS term')
     def expr(self, p):
         return p.expr + p.term
@@ -13,12 +40,17 @@ class CalcParser(Parser):
     @_('expr MINUS term')
     def expr(self, p):
         return p.expr - p.term
-
+    
     @_('term')
     def expr(self, p):
         return p.term
 
-    @_('term MULT factor')
+
+
+
+
+
+    @_('term TIMES factor')
     def term(self, p):
         return p.term * p.factor
 
@@ -29,18 +61,33 @@ class CalcParser(Parser):
     @_('factor')
     def term(self, p):
         return p.factor
+    
+
+
+
 
     @_('NUMBER')
     def factor(self, p):
         return p.NUMBER
 
-    @_('IPAREN expr DPAREN')
+    @_('MINUS factor')
     def factor(self, p):
-        return p.expr
+        return -p.factor
+
+    @_('ID')
+    def factor(self, p):
+        return self.names[p.ID]
+
+    @_('LPAREN statement RPAREN')
+    def factor(self, p):
+        return p.statement
+
+
+
 
 if __name__ == '__main__':
-    lexer = GetTokens()
-    parser = CalcParser()
+    lexer = CalcLexer()
+    parser = Gramatica()
 
     while True:
         try:

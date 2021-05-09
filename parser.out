@@ -1,0 +1,189 @@
+Grammar:
+
+Rule 0     S' -> total
+Rule 1     total -> BEGIN NEWLINE expr NEWLINE END
+Rule 2     expr -> term
+Rule 3     expr -> expr NEWLINE term
+Rule 4     term -> BACK NUMBER PTOCOMA
+Rule 5     term -> LEFT NUMBER PTOCOMA
+Rule 6     term -> RIGHT NUMBER PTOCOMA
+Rule 7     term -> FORWARD NUMBER PTOCOMA
+
+Unused terminals:
+
+    RPAREN
+    LPAREN
+    ID
+    REPEAT
+
+Terminals, with rules where they appear:
+
+BACK                 : 4
+BEGIN                : 1
+END                  : 1
+FORWARD              : 7
+ID                   : 
+LEFT                 : 5
+LPAREN               : 
+NEWLINE              : 1 1 3
+NUMBER               : 4 5 6 7
+PTOCOMA              : 4 5 6 7
+REPEAT               : 
+RIGHT                : 6
+RPAREN               : 
+error                : 
+
+Nonterminals, with rules where they appear:
+
+expr                 : 1 3
+term                 : 2 3
+total                : 0
+
+
+state 0
+
+    (0) S' -> . total
+    (1) total -> . BEGIN NEWLINE expr NEWLINE END
+    BEGIN           shift and go to state 2
+
+    total                          shift and go to state 1
+
+state 1
+
+    (0) S' -> total .
+
+
+state 2
+
+    (1) total -> BEGIN . NEWLINE expr NEWLINE END
+    NEWLINE         shift and go to state 3
+
+
+state 3
+
+    (1) total -> BEGIN NEWLINE . expr NEWLINE END
+    (2) expr -> . term
+    (3) expr -> . expr NEWLINE term
+    (4) term -> . BACK NUMBER PTOCOMA
+    (5) term -> . LEFT NUMBER PTOCOMA
+    (6) term -> . RIGHT NUMBER PTOCOMA
+    (7) term -> . FORWARD NUMBER PTOCOMA
+    BACK            shift and go to state 6
+    LEFT            shift and go to state 7
+    RIGHT           shift and go to state 8
+    FORWARD         shift and go to state 9
+
+    expr                           shift and go to state 4
+    term                           shift and go to state 5
+
+state 4
+
+    (1) total -> BEGIN NEWLINE expr . NEWLINE END
+    (3) expr -> expr . NEWLINE term
+    NEWLINE         shift and go to state 10
+
+
+state 5
+
+    (2) expr -> term .
+    NEWLINE         reduce using rule 2 (expr -> term .)
+
+
+state 6
+
+    (4) term -> BACK . NUMBER PTOCOMA
+    NUMBER          shift and go to state 11
+
+
+state 7
+
+    (5) term -> LEFT . NUMBER PTOCOMA
+    NUMBER          shift and go to state 12
+
+
+state 8
+
+    (6) term -> RIGHT . NUMBER PTOCOMA
+    NUMBER          shift and go to state 13
+
+
+state 9
+
+    (7) term -> FORWARD . NUMBER PTOCOMA
+    NUMBER          shift and go to state 14
+
+
+state 10
+
+    (1) total -> BEGIN NEWLINE expr NEWLINE . END
+    (3) expr -> expr NEWLINE . term
+    (4) term -> . BACK NUMBER PTOCOMA
+    (5) term -> . LEFT NUMBER PTOCOMA
+    (6) term -> . RIGHT NUMBER PTOCOMA
+    (7) term -> . FORWARD NUMBER PTOCOMA
+    END             shift and go to state 15
+    BACK            shift and go to state 6
+    LEFT            shift and go to state 7
+    RIGHT           shift and go to state 8
+    FORWARD         shift and go to state 9
+
+    term                           shift and go to state 16
+
+state 11
+
+    (4) term -> BACK NUMBER . PTOCOMA
+    PTOCOMA         shift and go to state 17
+
+
+state 12
+
+    (5) term -> LEFT NUMBER . PTOCOMA
+    PTOCOMA         shift and go to state 18
+
+
+state 13
+
+    (6) term -> RIGHT NUMBER . PTOCOMA
+    PTOCOMA         shift and go to state 19
+
+
+state 14
+
+    (7) term -> FORWARD NUMBER . PTOCOMA
+    PTOCOMA         shift and go to state 20
+
+
+state 15
+
+    (1) total -> BEGIN NEWLINE expr NEWLINE END .
+    $end            reduce using rule 1 (total -> BEGIN NEWLINE expr NEWLINE END .)
+
+
+state 16
+
+    (3) expr -> expr NEWLINE term .
+    NEWLINE         reduce using rule 3 (expr -> expr NEWLINE term .)
+
+
+state 17
+
+    (4) term -> BACK NUMBER PTOCOMA .
+    NEWLINE         reduce using rule 4 (term -> BACK NUMBER PTOCOMA .)
+
+
+state 18
+
+    (5) term -> LEFT NUMBER PTOCOMA .
+    NEWLINE         reduce using rule 5 (term -> LEFT NUMBER PTOCOMA .)
+
+
+state 19
+
+    (6) term -> RIGHT NUMBER PTOCOMA .
+    NEWLINE         reduce using rule 6 (term -> RIGHT NUMBER PTOCOMA .)
+
+
+state 20
+
+    (7) term -> FORWARD NUMBER PTOCOMA .
+    NEWLINE         reduce using rule 7 (term -> FORWARD NUMBER PTOCOMA .)

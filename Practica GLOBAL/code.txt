@@ -1,0 +1,29 @@
+Ag
+[
+    CROSSOVER 40 50;
+    MUTATION BITFLIP;
+]
+Rt
+[
+    CROSSOVER 9 14;
+    MUTATION POLYNOMIAL;
+]
+
+**  BEGIN expr END  **
+
+
+    ** ag[]; rt[];  **
+expr -> expr  term  
+expr -> term
+term -> ID[caracteristicas];
+
+
+    **  CROSSOVER, MUTATION, REPLACEMENT
+caracteristicas -> caracteristicas sentence
+caracteristicas -> sentence
+
+sentence -> POBLATION NUMBER;
+sentence -> MUTATION typemutation;
+
+typemutation -> BITFLIP
+typemutation -> POLYNOMIAL

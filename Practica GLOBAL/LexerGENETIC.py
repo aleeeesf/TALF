@@ -3,8 +3,8 @@ from sly import Lexer
 class lexerGENETIC(Lexer):
     # Set of token names.   This is always required
     tokens = {  ID, BEGIN, END, POBLATION, FITNESS, SELECTION, CROSSOVER, MUTATION, REPLACEMENT, 
-                TORNEO, RULETA, RANKING, BITFLIP, POLYNOMIAL, WORST, RANDOM,
-                NUMBER, LPAREN, RPAREN, PTOCOMA
+                TOURNAMENT, ROULETTE, RANKING, BITFLIP, POLYNOMIAL, WORST, RANDOM,
+                NUMBER, LPAREN, RPAREN, PTOCOMA, AND
             }
 
     # String containing ignored characters between tokens
@@ -22,8 +22,8 @@ class lexerGENETIC(Lexer):
     MUTATION    = 'MUTATION'
     REPLACEMENT = 'REPLACEMENT'
 
-    TORNEO      = 'TORNEO'
-    RULETA      = 'RULETA'
+    TOURNAMENT      = 'TOURNAMENT'
+    ROULETTE      = 'ROULETTE'
     RANKING     = 'RANKING'
     BITFLIP     = 'BITFLIP'
     POLYNOMIAL  = 'POLYNOMIAL'
@@ -38,6 +38,7 @@ class lexerGENETIC(Lexer):
     LPAREN  = r'\['
     RPAREN  = r'\]'
     PTOCOMA  = r'\;'
+    AND = r'\|'
     #NEWLINE = r'\n'
     #VACIO = r' '
 

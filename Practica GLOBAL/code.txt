@@ -1,29 +1,16 @@
+BEGIN
 Ag
 [
-    CROSSOVER 40 50;
-    MUTATION BITFLIP;
+    POBLATION 40;
+    MUTATION BITFLIP 8;
+    SELECTION TOURNAMENT 5;
+    REPLACEMENT WORST;
 ]
-Rt
+Bt
 [
-    CROSSOVER 9 14;
-    MUTATION POLYNOMIAL;
+    POBLATION 40;
+    MUTATION POLYNOMIAL 10;
+    SELECTION TOURNAMENT 5;
+    REPLACEMENT WORST;
 ]
-
-**  BEGIN expr END  **
-
-
-    ** ag[]; rt[];  **
-expr -> expr  term  
-expr -> term
-term -> ID[caracteristicas];
-
-
-    **  CROSSOVER, MUTATION, REPLACEMENT
-caracteristicas -> caracteristicas sentence
-caracteristicas -> sentence
-
-sentence -> POBLATION NUMBER;
-sentence -> MUTATION typemutation;
-
-typemutation -> BITFLIP
-typemutation -> POLYNOMIAL
+END

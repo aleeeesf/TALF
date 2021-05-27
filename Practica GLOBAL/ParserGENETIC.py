@@ -1,9 +1,8 @@
 import turtle
 import copy
 from sly import Parser
-from lexerGENETIC import lexerGENETIC
+from LexerGENETIC import lexerGENETIC
 
-t = turtle.Turtle()
 
 class Gramatica(Parser):
     # Get the token list from the lexer (required)
@@ -11,7 +10,7 @@ class Gramatica(Parser):
     tokens = lexerGENETIC.tokens
     start = 'total'
 
-    
+    #   ***     TOTAL       ***    
     @_('BEGIN expr END')
     def total(self, p):
         return p.expr 
@@ -21,49 +20,138 @@ class Gramatica(Parser):
     def total(self, p):
         print("FINALIZADO")  
     
-    
+
+
+
+    #   ***     TERM       ***
     @_('expr term')
     def expr(self, p):
         return ("next",p.expr,p.term)
+
    
     
     @_('term')
     def expr(self, p):
         return p.term
-  
 
-    @_('FORWARD NUMBER PTOCOMA')
-    def term(self, p):
-        return ("term",expression("FORWARD",p.NUMBER))
+
+    @_('ID LPAREN caracteristicas RPAREN')
+    def term(self,p):
+        return ("term",expression("VARIABLE",p.ID,p.caracteristicas,None))
+
+
+
+#   ***     CARACTERISTICAS       ***
+    @_('caracteristicas sentence')
+    def caracteristicas(self,p):
+        return ("next",p.caracteristicas,p.sentence)
+
+
+    @_('sentence')
+    def caracteristicas(self,p): 
+        return p.sentence
+
+
+
+
+    #   ***     SENTENCE       ***
+    @_('POBLATION NUMBER PTOCOMA')
+    def sentence(self,p):
+        return ("sentence",expression("POBLATION",p.NUMBER,None,None))
+
+
+    @_('MUTATION typemutation PTOCOMA')
+    def sentence(self,p):
+        return p.typemutation
         
 
-    @_('RIGHT NUMBER PTOCOMA')
-    def term(self, p):
-        return ('term',expression("RIGHT",p.NUMBER))
+    @_('REPLACEMENT typereplace PTOCOMA')
+    def sentence(self,p):
+        return p.typereplace
         
 
-    @_('LEFT NUMBER PTOCOMA')
-    def term(self, p):
-        return ("term",expression("LEFT",p.NUMBER))
+    @_('CROSSOVER NUMBER typecross')
+    def sentence(self,p):
+        return p.typecross
+
+
+    @_('SELECTION typeselection PTOCOMA')
+    def sentence(self,p):
+        return p.typeselection
         
 
-    @_('BACK NUMBER PTOCOMA')
-    def term(self, p):
-        return ('term',expression("BACK",p.NUMBER)) 
-       
-
-    @_('REPEAT NUMBER LPAREN expr RPAREN')
-    def term(self, p):
-        return ('term',expression("REPEAT",p.NUMBER),p.expr)
+    @_('FITNESS typefitness PTOCOMA')
+    def sentence(self,p):
+        return p.typefitness
+        
 
 
+    #   ***     TYPES       ***
+
+    #Tipos de mutación
+    @_('BITFLIP NUMBER')
+    def typemutation(self,p):        
+        return ("sentence",expression("MUTATION","BITFLIP",p.NUMBER,None))
+
+    @_('POLYNOMIAL NUMBER')
+    def typemutation(self,p):        
+        return ("sentence",expression("MUTATION","POLYNOMIAL",p.NUMBER,None))
+
+
+
+    #Tipos de selección
+    @_('TOURNAMENT NUMBER')
+    def typeselection(self,p):
+        return ("sentence",expression("SELECTION","TOURNAMENT",p.NUMBER,None))
+
+    @_('ROULETTE')
+    def typeselection(self,p):
+        return ("sentence",expression("SELECTION","roulette",None,None))
+
+    @_('RANKING')
+    def typeselection(self,p):
+        return ("sentence",expression("SELECTION","RANKING",None,None))
+
+
+
+    #Tipos de Reemplazo
+    @_('WORST')
+    def typereplace(self,p):
+        return ("sentence",expression("REPLACEMENT","WORST",None,None))
+
+    @_('RANDOM')
+    def typereplace(self,p):
+        return ("sentence",expression("REPLACEMENT","RANDOM",None,None))
+
+
+
+    #Tipos de Crossover
+    @_('PTOCOMA')
+    def typecross(self,p):
+        print('1 NUMERO')
+
+    @_('AND NUMBER PTOCOMA')
+    def typecross(self,p):
+        print('2 NUMEROS')
+
+
+    #Tipos de Fitness
+    @_('PTOCOMA')
+    def typefitness(self,p):
+        print('1 NUMERO')
+
+    @_('AND NUMBER PTOCOMA')
+    def typefitness(self,p):
+        print('2 NUMEROS')
 
 
 class expression():
-    
-    def __init__(self,exprname, num):
+
+    def __init__(self,exprname, element, element2, element3):
         self.name = exprname
-        self.number = num
+        self.fElement = element
+        self.sElement = element2
+        self.tElement = element3
 
 
 class interpreter:    
@@ -79,11 +167,15 @@ class interpreter:
         
         if isinstance(node, int):
             return node
+
+
         if isinstance(node, str):
             return node
 
+
         if node is None:            
             return None
+
 
         if node[0] == 'next':
             self.avanzarArbol(node[1])
@@ -91,30 +183,55 @@ class interpreter:
 
 
         if node[0] == 'term':                        
-            if(node[1].name == "FORWARD"):
-                t.forward(node[1].number)
-
-            if(node[1].name == "LEFT"):                
-                if(node[1].number >= 0 and node[1].number <= 360):
-                    t.left(node[1].number)
-                else:
-                    raise ValueError("El angulo sobrepasa los valores")
-
-            if(node[1].name == "RIGHT"):
-                if(node[1].number >= 0 and node[1].number <= 360):
-                    t.right(node[1].number)
-                else:
-                    raise ValueError("El angulo sobrepasa los valores")
-
-            if(node[1].name == "BACK"):
-                t.back(node[1].number)
+            if(node[1].name == "VARIABLE"):
+                print("Variable ",node[1].fElement," con las siguientes caracteristicas:")
+                self.avanzarArbol(node[1].sElement)
+               
             
+        if node[0] == 'sentence':            
+            if node[1].name == "MUTATION":
+                if node[1].fElement == "BITFLIP":
+                    print("Ha elegido mutacion bitflip con ",node[1].sElement," elementos")
+                
+                elif node[1].fElement == "POLYNOMIAL":
+                    print("Ha elegido mutacion polinomica con ",node[1].sElement," elementos")
 
-            if(node[1].name == "REPEAT"):
-                for i in range(node[1].number):
-                   self.avanzarArbol(node[2])
-     
+                else:
+                    raise ValueError("ERROR CONFIGURACION EN MUTACION")
 
+            if node[1].name == "POBLATION":
+                print("Ha elegido población con ",node[1].fElement," elementos")
+
+            if node[1].name == "FITNESS":
+                print("FALTA PONER")
+
+            if node[1].name == "SELECTION":
+                
+                if node[1].fElement == "TOURNAMENT":
+                    print("Ha elegido seleccion pot torneo con ",node[1].sElement," elementos")
+               
+                else:
+                    if node[1].fElement == "ROULETTE":
+                        print("Ha elegido seleccion por ruleta")
+                    
+                    elif node[1].fElement == "RANKING":
+                        print("Ha elegido seleccion por ranking")
+                    
+                    else:
+                        raise ValueError("ERROR CONFIGURACION EN SELECCION")
+
+
+            if node[1].name == "CROSSOVER":
+                print("FALTA CROSSOVER")
+
+
+            if node[1].name == "REPLACEMENT":
+                if node[1].fElement == "WORST":
+                    print("Ha elegido reemplazo (peor)")
+               
+                elif node[1].fElement == "RANDOM":
+                    print("Ha elegido reemplazo (mejor)")
+            
 
 if __name__ == '__main__':
     lexer = lexerGENETIC()
@@ -128,8 +245,6 @@ if __name__ == '__main__':
        
         tree = parser.parse(lexer.tokenize(text))
         interpreter(tree)
-        turtle.exitonclick()
-        turtle.bye()
 
     except EOFError:
         print("Failed!")

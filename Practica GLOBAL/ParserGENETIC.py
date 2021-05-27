@@ -72,7 +72,7 @@ class Gramatica(Parser):
 
     @_('CROSSOVER NUMBER typecross')
     def sentence(self,p):
-        return p.typecross
+        return ("sentence",expression("CROSSOVER",p.NUMBER,p.typecross,None))
 
 
     @_('SELECTION typeselection PTOCOMA')
@@ -128,11 +128,11 @@ class Gramatica(Parser):
     #Tipos de Crossover
     @_('PTOCOMA')
     def typecross(self,p):
-        print('1 NUMERO')
+        return None
 
     @_('AND NUMBER PTOCOMA')
     def typecross(self,p):
-        print('2 NUMEROS')
+        return p.NUMBER
 
 
     #Tipos de Fitness
@@ -200,7 +200,11 @@ class interpreter:
                     raise ValueError("ERROR CONFIGURACION EN MUTACION")
 
             if node[1].name == "POBLATION":
-                print("Ha elegido población con ",node[1].fElement," elementos")
+                if node[1].fElement != None:
+                    print("Ha elegido población con ",node[1].fElement," elementos")
+
+                else:
+                    print("ERROR SINTÁCTICO EN POBLACION")
 
             if node[1].name == "FITNESS":
                 print("FALTA PONER")
@@ -208,7 +212,7 @@ class interpreter:
             if node[1].name == "SELECTION":
                 
                 if node[1].fElement == "TOURNAMENT":
-                    print("Ha elegido seleccion pot torneo con ",node[1].sElement," elementos")
+                    print("Ha elegido seleccion por torneo con ",node[1].sElement," elementos")
                
                 else:
                     if node[1].fElement == "ROULETTE":
@@ -222,7 +226,18 @@ class interpreter:
 
 
             if node[1].name == "CROSSOVER":
-                print("FALTA CROSSOVER")
+                if node[1].sElement != None:
+                    if node[1].fElement < node[1].sElement:
+                        print("Crossover con punto de corte en ",node[1].fElement," y en ",node[1].sElement)
+                    
+                    else:
+                        raise ValueError("ERROR: PRIMER PUNTO MENOR QUE EL SEGUNDO")
+               
+                elif node[1].sElement == None:
+                    print("Crossover con punto de corte en ",node[1].fElement)
+                
+                else:
+                    raise ValueError("ERROR SINTACTICO EN CROSSOVER")
 
 
             if node[1].name == "REPLACEMENT":
@@ -232,6 +247,8 @@ class interpreter:
                 elif node[1].fElement == "RANDOM":
                     print("Ha elegido reemplazo (mejor)")
             
+                else:
+                    raise ValueError("ERROR SINTACTICO EN REEMPLAZO")
 
 if __name__ == '__main__':
     lexer = lexerGENETIC()

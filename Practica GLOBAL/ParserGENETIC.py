@@ -1,5 +1,3 @@
-import turtle
-import copy
 from sly import Parser
 from LexerGENETIC import lexerGENETIC
 
@@ -184,24 +182,24 @@ class interpreter:
 
         if node[0] == 'term':                        
             if(node[1].name == "VARIABLE"):
-                print("Variable ",node[1].fElement," con las siguientes caracteristicas:")
+                print("\n>Variable ",node[1].fElement," con las siguientes caracteristicas:")
                 self.avanzarArbol(node[1].sElement)
                
             
         if node[0] == 'sentence':            
             if node[1].name == "MUTATION":
                 if node[1].fElement == "BITFLIP":
-                    print("Ha elegido mutacion bitflip con ",node[1].sElement," elementos")
+                    print("  * Mutacion bitflip con ",node[1].sElement," elementos")
                 
                 elif node[1].fElement == "POLYNOMIAL":
-                    print("Ha elegido mutacion polinomica con ",node[1].sElement," elementos")
+                    print("  * Mutacion polinomica con ",node[1].sElement," elementos")
 
                 else:
                     raise ValueError("ERROR CONFIGURACION EN MUTACION")
 
             if node[1].name == "POBLATION":
                 if node[1].fElement != None:
-                    print("Ha elegido población con ",node[1].fElement," elementos")
+                    print("  * Población con ",node[1].fElement," elementos")
 
                 else:
                     print("ERROR SINTÁCTICO EN POBLACION")
@@ -212,14 +210,14 @@ class interpreter:
             if node[1].name == "SELECTION":
                 
                 if node[1].fElement == "TOURNAMENT":
-                    print("Ha elegido seleccion por torneo con ",node[1].sElement," elementos")
+                    print("  * Seleccion por torneo con ",node[1].sElement," elementos")
                
                 else:
                     if node[1].fElement == "ROULETTE":
-                        print("Ha elegido seleccion por ruleta")
+                        print("  * Seleccion por ruleta")
                     
                     elif node[1].fElement == "RANKING":
-                        print("Ha elegido seleccion por ranking")
+                        print("  * Seleccion por ranking")
                     
                     else:
                         raise ValueError("ERROR CONFIGURACION EN SELECCION")
@@ -228,13 +226,13 @@ class interpreter:
             if node[1].name == "CROSSOVER":
                 if node[1].sElement != None:
                     if node[1].fElement < node[1].sElement:
-                        print("Crossover con punto de corte en ",node[1].fElement," y en ",node[1].sElement)
+                        print("  * Crossover con punto de corte en ",node[1].fElement," y en ",node[1].sElement)
                     
                     else:
                         raise ValueError("ERROR: PRIMER PUNTO MENOR QUE EL SEGUNDO")
                
                 elif node[1].sElement == None:
-                    print("Crossover con punto de corte en ",node[1].fElement)
+                    print("  * Crossover con punto de corte en ",node[1].fElement)
                 
                 else:
                     raise ValueError("ERROR SINTACTICO EN CROSSOVER")
@@ -242,10 +240,10 @@ class interpreter:
 
             if node[1].name == "REPLACEMENT":
                 if node[1].fElement == "WORST":
-                    print("Ha elegido reemplazo (peor)")
+                    print("  * Reemplazo (peor)")
                
                 elif node[1].fElement == "RANDOM":
-                    print("Ha elegido reemplazo (mejor)")
+                    print("  * Reemplazo (mejor)")
             
                 else:
                     raise ValueError("ERROR SINTACTICO EN REEMPLAZO")

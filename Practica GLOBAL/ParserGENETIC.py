@@ -1,6 +1,6 @@
 from sly import Parser
 from LexerGENETIC import lexerGENETIC
-
+import numpy as np
 
 class Gramatica(Parser):
     # Get the token list from the lexer (required)
@@ -25,7 +25,6 @@ class Gramatica(Parser):
     @_('expr term')
     def expr(self, p):
         return ("next",p.expr,p.term)
-
    
     
     @_('term')
@@ -36,6 +35,7 @@ class Gramatica(Parser):
     @_('ID LPAREN caracteristicas RPAREN')
     def term(self,p):
         return ("term",expression("VARIABLE",p.ID,p.caracteristicas,None))
+
 
 
 
@@ -82,6 +82,7 @@ class Gramatica(Parser):
     def sentence(self,p):
         return p.typefitness
         
+
 
 
     #   ***     TYPES       ***
@@ -133,6 +134,7 @@ class Gramatica(Parser):
         return p.NUMBER
 
 
+
     #Tipos de Fitness
     @_('PTOCOMA')
     def typefitness(self,p):
@@ -155,6 +157,8 @@ class expression():
 class interpreter:    
 
     def __init__(self, tree):
+        self.charCounter = np.zeros(5)
+        self.charNames = ["MUTATION","POBLATION","SELECTION","CROSSOVER","REPLACEMENT","FITNESS"]
         resultado = self.avanzarArbol(tree)        
         if resultado is not None and isinstance(resultado, int):
             print(resultado)
@@ -182,12 +186,19 @@ class interpreter:
 
         if node[0] == 'term':                        
             if(node[1].name == "VARIABLE"):
+                self.charCounter = np.zeros(5)
                 print("\n>Variable ",node[1].fElement," con las siguientes caracteristicas:")
                 self.avanzarArbol(node[1].sElement)
+                
+                findError = np.where(self.charCounter == 0)[0]
+                print(findError)
+                if findError.size != 0:
+                    raise ValueError("ERROR: Falta configuracion en ",node[1].fElement, " caracteristica: ",self.charCounter[findError])
                
             
         if node[0] == 'sentence':            
             if node[1].name == "MUTATION":
+                self.charCounter[0] = 1
                 if node[1].fElement == "BITFLIP":
                     print("  * Mutacion bitflip con ",node[1].sElement," elementos")
                 
@@ -198,17 +209,17 @@ class interpreter:
                     raise ValueError("ERROR CONFIGURACION EN MUTACION")
 
             if node[1].name == "POBLATION":
+                self.charCounter[1] = 1
                 if node[1].fElement != None:
                     print("  * Población con ",node[1].fElement," elementos")
 
                 else:
                     print("ERROR SINTÁCTICO EN POBLACION")
 
-            if node[1].name == "FITNESS":
-                print("FALTA PONER")
+
 
             if node[1].name == "SELECTION":
-                
+                self.charCounter[2] = 1
                 if node[1].fElement == "TOURNAMENT":
                     print("  * Seleccion por torneo con ",node[1].sElement," elementos")
                
@@ -224,6 +235,7 @@ class interpreter:
 
 
             if node[1].name == "CROSSOVER":
+                self.charCounter[3] = 1
                 if node[1].sElement != None:
                     if node[1].fElement < node[1].sElement:
                         print("  * Crossover con punto de corte en ",node[1].fElement," y en ",node[1].sElement)
@@ -239,6 +251,7 @@ class interpreter:
 
 
             if node[1].name == "REPLACEMENT":
+                self.charCounter[4] = 1
                 if node[1].fElement == "WORST":
                     print("  * Reemplazo (peor)")
                
@@ -247,6 +260,11 @@ class interpreter:
             
                 else:
                     raise ValueError("ERROR SINTACTICO EN REEMPLAZO")
+
+
+            if node[1].name == "FITNESS":
+                self.charCounter[5] = 1
+                print("FALTA PONER")
 
 if __name__ == '__main__':
     lexer = lexerGENETIC()

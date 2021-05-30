@@ -9,16 +9,17 @@ class Gramatica(Parser):
     start = 'total'
 
     #   ***     TOTAL       ***    
-    @_('BEGIN expr END')
+    @_('BEGIN typebegin')
     def total(self, p):
-        return p.expr 
-        
+        return p.typebegin        
     
-    @_('BEGIN  END')
-    def total(self, p):
+    @_('END')
+    def typebegin(self, p):
         print("FINALIZADO")  
     
-
+    @_('expr END')
+    def typebegin(self, p):
+        return p.expr   
 
 
     #   ***     TERM       ***
@@ -78,9 +79,14 @@ class Gramatica(Parser):
         return p.typeselection
         
 
-    @_('FITNESS typefitness PTOCOMA')
+    @_('FITNESS EQUATION PTOCOMA')
     def sentence(self,p):
-        return p.typefitness
+        return ("sentence",expression("FITNESS",p.EQUATION,None,None))
+
+
+    @_('INTERCHANGE NUMBER PTOCOMA')
+    def sentence(self,p):
+        return ("sentence",expression("INTERCHANGE",p.NUMBER,None,None))
         
 
 
@@ -134,17 +140,6 @@ class Gramatica(Parser):
         return p.NUMBER
 
 
-
-    #Tipos de Fitness
-    @_('PTOCOMA')
-    def typefitness(self,p):
-        print('1 NUMERO')
-
-    @_('AND NUMBER PTOCOMA')
-    def typefitness(self,p):
-        print('2 NUMEROS')
-
-
 class expression():
 
     def __init__(self,exprname, element, element2, element3):
@@ -157,8 +152,8 @@ class expression():
 class interpreter:    
 
     def __init__(self, tree):
-        self.charCounter = np.zeros(5)
-        self.charNames = ["MUTATION","POBLATION","SELECTION","CROSSOVER","REPLACEMENT","FITNESS"]
+        self.charCounter = np.zeros(7)
+        self.charNames = ["MUTATION","POBLATION","SELECTION","CROSSOVER","REPLACEMENT","INTERCHANGES","FITNESS"]
         resultado = self.avanzarArbol(tree)        
         if resultado is not None and isinstance(resultado, int):
             print(resultado)
@@ -186,42 +181,42 @@ class interpreter:
 
         if node[0] == 'term':                        
             if(node[1].name == "VARIABLE"):
-                self.charCounter = np.zeros(5)
+                self.charCounter = np.zeros(7)
                 print("\n>Variable ",node[1].fElement," con las siguientes caracteristicas:")
                 self.avanzarArbol(node[1].sElement)
                 
-                findError = np.where(self.charCounter == 0)[0]
-                print(findError)
+                findError = np.where(self.charCounter == 0)[0]                
                 if findError.size != 0:
-                    raise ValueError("ERROR: Falta configuracion en ",node[1].fElement, " caracteristica: ",self.charCounter[findError])
+                    raise ValueError("ERROR: Falta caracteristica %s en variable %s "%(self.charNames[findError[0]],node[1].fElement))
                
             
         if node[0] == 'sentence':            
             if node[1].name == "MUTATION":
                 self.charCounter[0] = 1
                 if node[1].fElement == "BITFLIP":
-                    print("  * Mutacion bitflip con ",node[1].sElement," elementos")
+                    print("  * Mutacion bitflip con %s elementos"%node[1].sElement)
                 
                 elif node[1].fElement == "POLYNOMIAL":
-                    print("  * Mutacion polinomica con ",node[1].sElement," elementos")
+                    print("  * Mutacion polinomica con %s elementos"%node[1].sElement)
 
                 else:
-                    raise ValueError("ERROR CONFIGURACION EN MUTACION")
+                    raise ValueError("ERROR: Error configuracion en MUTATION")
+
 
             if node[1].name == "POBLATION":
                 self.charCounter[1] = 1
                 if node[1].fElement != None:
-                    print("  * Población con ",node[1].fElement," elementos")
+                    print("  * Población con %s elementos"%node[1].fElement)
 
                 else:
-                    print("ERROR SINTÁCTICO EN POBLACION")
+                    print("ERROR: Error sintactico en POBLATION")
 
 
 
             if node[1].name == "SELECTION":
                 self.charCounter[2] = 1
                 if node[1].fElement == "TOURNAMENT":
-                    print("  * Seleccion por torneo con ",node[1].sElement," elementos")
+                    print("  * Seleccion por torneo con %s elementos"%node[1].sElement)
                
                 else:
                     if node[1].fElement == "ROULETTE":
@@ -231,23 +226,23 @@ class interpreter:
                         print("  * Seleccion por ranking")
                     
                     else:
-                        raise ValueError("ERROR CONFIGURACION EN SELECCION")
+                        raise ValueError("ERROR: Error configuracion en SELECTION")
 
 
             if node[1].name == "CROSSOVER":
                 self.charCounter[3] = 1
                 if node[1].sElement != None:
                     if node[1].fElement < node[1].sElement:
-                        print("  * Crossover con punto de corte en ",node[1].fElement," y en ",node[1].sElement)
+                        print("  * Crossover con punto de corte en %s y en %s"%(node[1].fElement,node[1].sElement))
                     
                     else:
-                        raise ValueError("ERROR: PRIMER PUNTO MENOR QUE EL SEGUNDO")
+                        raise ValueError("ERROR: El primer punto es mayor que el segundo")
                
                 elif node[1].sElement == None:
-                    print("  * Crossover con punto de corte en ",node[1].fElement)
+                    print("  * Crossover con punto de corte en %s"%node[1].fElement)
                 
                 else:
-                    raise ValueError("ERROR SINTACTICO EN CROSSOVER")
+                    raise ValueError("ERROR: Error sintactico en CROSSOVER")
 
 
             if node[1].name == "REPLACEMENT":
@@ -259,12 +254,20 @@ class interpreter:
                     print("  * Reemplazo (mejor)")
             
                 else:
-                    raise ValueError("ERROR SINTACTICO EN REEMPLAZO")
+                    raise ValueError("ERROR: Error sintactico en REPLACEMENT")
 
+
+            if node[1].name == "INTERCHANGE":
+                self.charCounter[5] = 1
+                if node[1].fElement != None:
+                    print("  * Intercambios de %s elementos"%node[1].fElement)
+
+                else:
+                    print("ERROR: Error sintactico en INTERCHANGES")
 
             if node[1].name == "FITNESS":
-                self.charCounter[5] = 1
-                print("FALTA PONER")
+                self.charCounter[6] = 1
+                print("  * Funcion FITNESS: %s"%node[1].fElement)
 
 if __name__ == '__main__':
     lexer = lexerGENETIC()

@@ -1,6 +1,14 @@
+# Realizado por: Alejandro Serrano Fernández & Pedro Antonio Navas Luque. 
+# Universidad de Cádiz, Mayo 2021.
+# Proyecto: Lenguaje de programación para la configuración de algoritmos genéticos
+# Este código incluye Parser e Intérprete del código introducido en 
+# el fichero "code.txt". La sintáxis y características del leguaje
+# queda definida en el manual de usuario que se ofrece.
+
 from sly import Parser
 from LexerGENETIC import lexerGENETIC
 import numpy as np
+
 
 class Gramatica(Parser):
     # Get the token list from the lexer (required)
@@ -8,18 +16,27 @@ class Gramatica(Parser):
     tokens = lexerGENETIC.tokens
     start = 'total'
 
+# Aquí se definen las reglas. Cuando una regla llega a su final, se devuelven n-nodos
+# Cuando se acabe de parsear, se obtendremos un árbol, que incluye todos 
+# los nodos por los que hemos pasado a través de las reglas.
+# return (nodo_izq, nodo_drcho,...) 
+
     #   ***     TOTAL       ***    
     @_('BEGIN typebegin')
     def total(self, p):
         return p.typebegin        
     
+
     @_('END')
     def typebegin(self, p):
         print("FINALIZADO")  
     
-    @_('expr END')
+
+    @_('expr END POLICY_BEGIN LPAREN rules RPAREN POLICY_END')
     def typebegin(self, p):
-        return p.expr   
+        return ("nextconfig",p.expr,p.rules)
+
+
 
 
     #   ***     TERM       ***
@@ -40,7 +57,19 @@ class Gramatica(Parser):
 
 
 
-#   ***     CARACTERISTICAS       ***
+    #   ***     RULES       ***
+    @_('rules polytypes')
+    def rules(self, p):
+        return ("next",p.rules,p.polytypes)
+   
+    
+    @_('polytypes')
+    def rules(self, p):
+        return p.polytypes
+
+
+
+    #   ***     CARACTERISTICAS       ***
     @_('caracteristicas sentence')
     def caracteristicas(self,p):
         return ("next",p.caracteristicas,p.sentence)
@@ -49,6 +78,29 @@ class Gramatica(Parser):
     @_('sentence')
     def caracteristicas(self,p): 
         return p.sentence
+
+
+
+
+    #   ***     POLYTYPES       ***
+    @_('GENERATIONS NUMBER PTOCOMA')
+    def polytypes(self,p):
+        return ("polysentence",expression("GENERATIONS",p.NUMBER,None,None))
+
+
+    @_('INTERCHANGE NUMBER PTOCOMA')
+    def polytypes(self,p):
+        return ("polysentence",expression("INTERCHANGE",p.NUMBER,None,None))
+
+
+    @_('SEND typesend PTOCOMA')
+    def polytypes(self,p):
+        return p.typesend
+
+
+    @_('RECEIVE typereceive PTOCOMA')
+    def polytypes(self,p):
+        return p.typereceive
 
 
 
@@ -81,12 +133,7 @@ class Gramatica(Parser):
 
     @_('FITNESS EQUATION PTOCOMA')
     def sentence(self,p):
-        return ("sentence",expression("FITNESS",p.EQUATION,None,None))
-
-
-    @_('INTERCHANGE NUMBER PTOCOMA')
-    def sentence(self,p):
-        return ("sentence",expression("INTERCHANGE",p.NUMBER,None,None))
+        return ("sentence",expression("FITNESS",p.EQUATION,None,None))    
         
 
 
@@ -109,9 +156,11 @@ class Gramatica(Parser):
     def typeselection(self,p):
         return ("sentence",expression("SELECTION","TOURNAMENT",p.NUMBER,None))
 
+
     @_('ROULETTE')
     def typeselection(self,p):
         return ("sentence",expression("SELECTION","roulette",None,None))
+
 
     @_('RANKING')
     def typeselection(self,p):
@@ -124,6 +173,7 @@ class Gramatica(Parser):
     def typereplace(self,p):
         return ("sentence",expression("REPLACEMENT","WORST",None,None))
 
+
     @_('RANDOM')
     def typereplace(self,p):
         return ("sentence",expression("REPLACEMENT","RANDOM",None,None))
@@ -135,11 +185,42 @@ class Gramatica(Parser):
     def typecross(self,p):
         return None
 
+
     @_('AND NUMBER PTOCOMA')
     def typecross(self,p):
         return p.NUMBER
 
 
+
+    #Tipos de send        
+    @_('BEST')
+    def typesend(self,p):
+        return ("polysentence",expression("SEND","BEST",None,None))
+
+
+    @_('RANDOM')
+    def typesend(self,p):
+        return ("polysentence",expression("SEND","RANDOM",None,None))
+
+
+
+    #Tipos de receive
+    @_('WORST')
+    def typereceive(self,p):
+        return ("polysentence",expression("RECEIVE","WORST",None,None))
+
+
+    @_('RANDOM')
+    def typereceive(self,p):
+        return ("polysentence",expression("RECEIVE","RANDOM",None,None))
+
+
+
+
+  
+
+# Clase expresion: Almacena los elementos que se devuelven en una regla. 
+# Almacena el nombre de la regla, y almacena hasta 3 elementos (Números, otra regla...)
 class expression():
 
     def __init__(self,exprname, element, element2, element3):
@@ -149,17 +230,27 @@ class expression():
         self.tElement = element3
 
 
+# Interpreta las reglas por las que pasa el Parser. Hace uso de un 
+# árbol binario para interpretarlas
 class interpreter:    
 
     def __init__(self, tree):
-        self.charCounter = np.zeros(7)
-        self.charNames = ["MUTATION","POBLATION","SELECTION","CROSSOVER","REPLACEMENT","INTERCHANGES","FITNESS"]
+        self.sentenceCounter = np.zeros(6)      # Cuenta cuántas configuraciones tiene la variable (del código) por la que pasamos
+        self.policyCounter = np.zeros(4)        # Cuenta cuántas políticas tenemos definida en el código
+
+        # Nombres de configuraciones: para determinar que configuración falta en una variable.
+        self.sentenceNames = ["MUTATION","POBLATION","SELECTION","CROSSOVER","REPLACEMENT","FITNESS"]  
+        # Nombres de políticas: para determinar que política falta en en el código.
+        self.policyNames = ["INTERCHANGE","GENERATIONS","SEND","RECEIVE"]
+        
         resultado = self.avanzarArbol(tree)        
         if resultado is not None and isinstance(resultado, int):
             print(resultado)
         if isinstance(resultado, str) and resultado[0] == '"':
             print(resultado)
 
+
+    #Función recursiva que interpreta el árbol binario recibido por el parser
     def avanzarArbol(self, node):
         
         if isinstance(node, int):
@@ -174,25 +265,41 @@ class interpreter:
             return None
 
 
-        if node[0] == 'next':
+        if node[0] == 'next':            
             self.avanzarArbol(node[1])
             self.avanzarArbol(node[2])
 
 
-        if node[0] == 'term':                        
+        if node[0] == 'nextconfig':            
+            print("\n     *****   VARIABLES DEFINIDAS   *****")  
+            self.avanzarArbol(node[1]) 
+            
+            print("\n\n     *****   POLITICAS DE INTERCAMBIOS   *****\n")           
+            self.avanzarArbol(node[2])
+            
+            # Comprobamos si falta una política por definir
+            findError = np.where(self.policyCounter == 0)[0]               
+            # Si falta una, lanzar el error e indicar dónde se encuentra
+            if findError.size != 0:                             
+                raise ValueError("ERROR: Falta caracteristica %s en la politica "%(self.policyNames[findError[0]]))
+
+
+        if node[0] == 'term': 
             if(node[1].name == "VARIABLE"):
-                self.charCounter = np.zeros(7)
+                self.sentenceCounter = np.zeros(6)                              
                 print("\n>Variable ",node[1].fElement," con las siguientes caracteristicas:")
                 self.avanzarArbol(node[1].sElement)
                 
-                findError = np.where(self.charCounter == 0)[0]                
+                # Comprobamos si falta una configuración en la variable en la que nos encontramos
+                findError = np.where(self.sentenceCounter == 0)[0]   
+                # Si falta una, lanzar el error e indicar dónde se encuentra             
                 if findError.size != 0:
-                    raise ValueError("ERROR: Falta caracteristica %s en variable %s "%(self.charNames[findError[0]],node[1].fElement))
-               
+                    raise ValueError("ERROR: Falta caracteristica %s en variable %s "%(self.sentenceNames[findError[0]],node[1].fElement))
+                
             
-        if node[0] == 'sentence':            
+        if node[0] == 'sentence':
             if node[1].name == "MUTATION":
-                self.charCounter[0] = 1
+                self.sentenceCounter[0] = 1
                 if node[1].fElement == "BITFLIP":
                     print("  * Mutacion bitflip con %s elementos"%node[1].sElement)
                 
@@ -204,7 +311,7 @@ class interpreter:
 
 
             if node[1].name == "POBLATION":
-                self.charCounter[1] = 1
+                self.sentenceCounter[1] = 1
                 if node[1].fElement != None:
                     print("  * Población con %s elementos"%node[1].fElement)
 
@@ -212,9 +319,8 @@ class interpreter:
                     print("ERROR: Error sintactico en POBLATION")
 
 
-
             if node[1].name == "SELECTION":
-                self.charCounter[2] = 1
+                self.sentenceCounter[2] = 1
                 if node[1].fElement == "TOURNAMENT":
                     print("  * Seleccion por torneo con %s elementos"%node[1].sElement)
                
@@ -230,7 +336,7 @@ class interpreter:
 
 
             if node[1].name == "CROSSOVER":
-                self.charCounter[3] = 1
+                self.sentenceCounter[3] = 1
                 if node[1].sElement != None:
                     if node[1].fElement < node[1].sElement:
                         print("  * Crossover con punto de corte en %s y en %s"%(node[1].fElement,node[1].sElement))
@@ -246,7 +352,7 @@ class interpreter:
 
 
             if node[1].name == "REPLACEMENT":
-                self.charCounter[4] = 1
+                self.sentenceCounter[4] = 1
                 if node[1].fElement == "WORST":
                     print("  * Reemplazo (peor)")
                
@@ -254,20 +360,58 @@ class interpreter:
                     print("  * Reemplazo (mejor)")
             
                 else:
-                    raise ValueError("ERROR: Error sintactico en REPLACEMENT")
+                    raise ValueError("ERROR: Error sintactico en REPLACEMENT")            
 
 
+            if node[1].name == "FITNESS":
+                self.sentenceCounter[5] = 1
+                print("  * Funcion FITNESS: %s"%node[1].fElement)
+
+
+        if node[0] == 'polysentence':
             if node[1].name == "INTERCHANGE":
-                self.charCounter[5] = 1
+                self.policyCounter[0] = 1
                 if node[1].fElement != None:
                     print("  * Intercambios de %s elementos"%node[1].fElement)
 
                 else:
                     print("ERROR: Error sintactico en INTERCHANGES")
+            
 
-            if node[1].name == "FITNESS":
-                self.charCounter[6] = 1
-                print("  * Funcion FITNESS: %s"%node[1].fElement)
+            if node[1].name == "GENERATIONS":
+                self.policyCounter[1] = 1
+                if node[1].fElement != None:
+                    print("  * Intercambios cada %s generaciones"%node[1].fElement)
+
+                else:
+                    print("ERROR: Error sintactico en GENERATIONS")
+
+
+            if node[1].name == "SEND":
+                self.policyCounter[2] = 1
+                if node[1].fElement == "BEST":
+                    print("  * Enviando mejores individuos")
+               
+                elif node[1].fElement == "RANDOM":
+                        print("  * Enviando individuos aleatoriamente")   
+                    
+                else:
+                    raise ValueError("ERROR: Error configuracion en SEND")
+
+            
+            if node[1].name == "RECEIVE":
+                self.policyCounter[3] = 1
+                if node[1].fElement == "WORST":
+                    print("  * Reeemplaza recibidos por sus peores individuos")
+               
+                elif node[1].fElement == "RANDOM":
+                        print("  * Reeemplaza recibidos por alguno de sus individuos aleatoriamente")   
+                    
+                else:
+                    raise ValueError("ERROR: Error configuracion en RECEIVE")
+
+
+
 
 if __name__ == '__main__':
     lexer = lexerGENETIC()
@@ -279,7 +423,9 @@ if __name__ == '__main__':
         
         text_file.close()
        
+        # Parseamos el código introducido
         tree = parser.parse(lexer.tokenize(text))
+        # Interpretamos el árbol recibido por el parser
         interpreter(tree)
 
     except EOFError:
